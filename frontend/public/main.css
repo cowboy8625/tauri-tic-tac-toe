@@ -23,4 +23,33 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 50px;
+  border: 1px solid black;
+}
+
+.bp:hover {
+  cursor: pointer;
+  background: #3b3b3b;
+  color: white;
+}
+
+.message {
+  font-size: 130px;
+  animation-name: skew-x-shakeng;
+  animation-duration: 0.7s;
+  animation-iteration-count: infinite;
+}
+
+@keyframes skew-x-shakeng{
+ 0% { transform: skewX(-15deg); }
+ 5% { transform: skewX(15deg); }
+ 10% { transform: skewX(-15deg); }
+ 15% { transform: skewX(15deg); }
+ 20% { transform: skewX(0deg); }
+ 100% { transform: skewX(0deg); }
+}
+
+.reset-btn {
+  width: 200px;
+  height: 50px;
+  font-size: 30px;
 }
