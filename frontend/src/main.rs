@@ -34,53 +34,65 @@ extern "C" {
 
 #[function_component(App)]
 pub fn app() -> Html {
-    let player = use_state(|| Player::X);
+    let state = use_state(|| ([None; 9], Player::X));
     let onclick = {
-        let player_state = player.clone();
-        Callback::from(move |inner: Option<Player>| {
+        let cloned_state = state.clone();
+        Callback::from(move |(id, inner): (usize, Option<Player>)| {
             if inner.is_some() {
                 return;
             }
-            let old = (*player_state).clone();
+            let (mut spots, old) = (*cloned_state).clone();
+            spots[id] = Some(old);
             let current = match old {
                 Player::X => Player::Y,
                 Player::Y => Player::X,
             };
-            player_state.set(current.clone());
+            cloned_state.set((spots, current));
         })
     };
     use_effect_with_deps(
-        move |_| {
-            window().map(|win| {
-                win.document().map(|doc| {
-                    doc.get_element_by_id("board").map(|el| {
-                        console::log!(&format!("el: {:?}", el));
-                    })
-                })
-            });
+        move |state| {
+            let (spots, player) = state;
+            console::log!(&format!("Spots: {:?}, Player: {:?}", spots, player));
             || ()
         },
-        player.clone(),
+        (*state).clone(),
     );
 
-    let label = (*player).clone();
+    let (spots, label) = (*state).clone();
+    if is_win(&spots) {
+        return html! {
+            <span>{" WINNER WINNER!!!!! "}</span>
+        }
+    }
     html! {
         <div id="board" class="container">
             <div class="row">
-                <Button value={label} onclick={onclick.clone()}/>
-                <Button value={label} onclick={onclick.clone()}/>
-                <Button value={label} onclick={onclick.clone()}/>
+                <Button id=0 value={label} onclick={onclick.clone()}/>
+                <Button id=1 value={label} onclick={onclick.clone()}/>
+                <Button id=2 value={label} onclick={onclick.clone()}/>
             </div>
             <div class="row">
-                <Button value={label} onclick={onclick.clone()}/>
-                <Button value={label} onclick={onclick.clone()}/>
-                <Button value={label} onclick={onclick.clone()}/>
+                <Button id=3 value={label} onclick={onclick.clone()}/>
+                <Button id=4 value={label} onclick={onclick.clone()}/>
+                <Button id=5 value={label} onclick={onclick.clone()}/>
             </div>
             <div class="row">
-                <Button value={label} onclick={onclick.clone()}/>
-                <Button value={label} onclick={onclick.clone()}/>
-                <Button value={label} onclick={onclick.clone()}/>
+                <Button id=6 value={label} onclick={onclick.clone()}/>
+                <Button id=7 value={label} onclick={onclick.clone()}/>
+                <Button id=8 value={label} onclick={onclick.clone()}/>
             </div>
         </div>
     }
+}
+
+fn is_win(b: &[Option<Player>]) -> bool {
+    (b[0] == b[1]) && (b[1] == b[2]) && (b[0] != None)
+    || (b[3] == b[4]) && (b[4] == b[5]) && (b[3] != None)
+    || (b[6] == b[7]) && (b[7] == b[8]) && (b[6] != None)
+    || (b[0] == b[3]) && (b[3] == b[6]) && (b[3] != None)
+    || (b[1] == b[4]) && (b[4] == b[7]) && (b[1] != None)
+    || (b[2] == b[5]) && (b[5] == b[8]) && (b[2] != None)
+    || (b[0] == b[4]) && (b[4] == b[8]) && (b[0] != None)
+    || (b[2] == b[4]) && (b[4] == b[6]) && (b[2] != None)
 }
