@@ -13,6 +13,15 @@ pub enum Player {
     Y,
 }
 
+impl Player {
+    fn swap(&self) -> Self {
+        match self {
+            Self::X => Self::Y,
+            Self::Y => Self::X,
+        }
+    }
+}
+
 impl std::fmt::Display for Player {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -38,32 +47,36 @@ pub fn app() -> Html {
     let onclick = {
         let cloned_state = state.clone();
         Callback::from(move |(id, inner): (usize, Option<Player>)| {
-            if inner.is_some() {
-                return;
-            }
+            if inner.is_some() { return; }
             let (mut spots, old) = (*cloned_state).clone();
             spots[id] = Some(old);
-            let current = match old {
-                Player::X => Player::Y,
-                Player::Y => Player::X,
-            };
-            cloned_state.set((spots, current));
+            cloned_state.set((spots, old.swap()));
         })
     };
-    use_effect_with_deps(
-        move |state| {
-            let (spots, player) = state;
-            console::log!(&format!("Spots: {:?}, Player: {:?}", spots, player));
-            || ()
-        },
-        (*state).clone(),
-    );
+
+    let reset = {
+        let cloned_state = state.clone();
+        Callback::from(move |_| {
+            cloned_state.set(([None; 9], Player::X));
+        })
+    };
 
     let (spots, label) = (*state).clone();
-    if is_win(&spots) {
+    console::log!(format!("{:?}", spots));
+    if !is_win(&spots) && spots.iter().all(|x| x.is_some()) {
         return html! {
-            <span>{" WINNER WINNER!!!!! "}</span>
-        }
+            <div class="container">
+                <span>{"No One Won This Time!"}</span>
+                <button onclick={reset}>{"New Game"}</button>
+            </div>
+        };
+    } else if is_win(&spots) {
+        return html! {
+            <div class="container">
+                <span>{format!("WINNER IS {:?}", label.swap())}</span>
+                <button onclick={reset}>{"New Game"}</button>
+            </div>
+        };
     }
     html! {
         <div id="board" class="container">
